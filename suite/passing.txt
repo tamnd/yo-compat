@@ -1,0 +1,10 @@
+# The Redis test files that pass against yodb today.
+#
+# One path per line, relative to the vendored tests/ directory and without the
+# .tcl on the end, which is the form runtest --single wants.
+#
+# This list only grows by somebody running suite/runtest.sh --all, watching a
+# file go green and adding it in a diff. It never grows by editing a test.
+#
+# It is empty because the suite has not been run against yodb yet. That is a
+# real answer and it is the one that goes here until there is a better one.

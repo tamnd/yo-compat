@@ -1,0 +1,85 @@
+# The counters, and what they consider a number.
+#
+# Redis is stricter here than people expect and the strictness is the
+# compatible part. A value with a leading space is not a number. A value with a
+# trailing newline is not a number. An integer stored as "010" is not the same
+# as one stored as "10" once you increment it. Every one of those is a place an
+# implementation written from the documentation gets it wrong.
+
+INCR counter
+INCR counter
+GET counter
+INCRBY counter 10
+INCRBY counter -20
+GET counter
+DECR counter
+DECRBY counter 5
+GET counter
+
+# Starting from a string that happens to look like a number.
+SET fromstring 100
+INCR fromstring
+GET fromstring
+SET negative -100
+INCR negative
+GET negative
+
+# Leading zeroes are stored as typed and are not a number to increment.
+SET padded 010
+INCR padded
+GET padded
+
+# Whitespace either side is not a number, in either direction.
+SET leading " 11"
+INCR leading
+SET trailing "11 "
+INCR trailing
+SET newline "11\n"
+INCR newline
+
+# Empty is not zero.
+SET blank ""
+INCR blank
+
+# Not numbers at all.
+SET word hello
+INCR word
+INCRBY word 1
+DECR word
+INCRBYFLOAT word 1.0
+
+# The ends of the range. One past the top is an error and not a wrap.
+SET big 9223372036854775807
+INCR big
+INCRBY big 1
+SET small -9223372036854775808
+DECR small
+DECRBY small 1
+SET big2 9223372036854775806
+INCR big2
+GET big2
+
+# The increment itself has to be a number, and has to fit.
+INCRBY counter notanumber
+INCRBY counter 9223372036854775808
+INCRBY counter 1.5
+
+# INCRBYFLOAT is a different command with different rules. It replies with a
+# bulk string, it trims trailing zeroes, and it takes exponent notation.
+SET float 10.5
+INCRBYFLOAT float 0.1
+INCRBYFLOAT float -5
+INCRBYFLOAT float 5.0e3
+GET float
+SET whole 10
+INCRBYFLOAT whole 0.1
+INCRBYFLOAT whole -0.1
+SET intish 3.0
+INCRBYFLOAT intish 1.000000000000000005
+INCRBYFLOAT newfloat 1.5
+GET newfloat
+INCRBYFLOAT float notafloat
+INCRBYFLOAT float nan
+INCRBYFLOAT float inf
+SET hexish 0x10
+INCRBYFLOAT hexish 1

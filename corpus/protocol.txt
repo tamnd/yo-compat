@@ -1,0 +1,47 @@
+# The connection itself.
+#
+# HELLO is missing from this file even though it is the most protocol shaped
+# command there is, because its reply carries a server version, a connection id
+# and a role, none of which can match and none of which should. It is sent by
+# the harness under --resp3 and its reply is deliberately not compared. What is
+# compared is everything that comes after it, which is where switching to RESP3
+# actually shows.
+
+PING
+PING hello
+PING "two words"
+PING one two
+ECHO hello
+ECHO ""
+ECHO "with spaces"
+ECHO
+ECHO one two
+
+SELECT 0
+SELECT 1
+SELECT 16
+SELECT -1
+SELECT notanumber
+SELECT
+SELECT 0
+
+# Under RESP3 these are the replies whose type changes, which is the whole
+# reason the harness can run the same corpus twice. A double comes back as a
+# double instead of a bulk string, a null as an underscore instead of $-1.
+#
+# They come before RESET rather than after it, because RESET puts the connection
+# back on RESP2 and a RESP3 section underneath it would quietly be testing RESP2
+# twice.
+SET num 10
+INCRBYFLOAT num 0.5
+GET missingkey
+MGET missingkey alsomissing
+GETDEL missingkey
+LCS missingkey alsomissing IDX
+
+# RESET is supposed to put the connection back the way it found it, and to say
+# so with a simple string rather than OK.
+SET before reset
+RESET
+GET before
+PING

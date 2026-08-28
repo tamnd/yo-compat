@@ -1,0 +1,48 @@
+# The harness gets checked here. The comparison itself does not run on a shared
+# runner yet, because it wants a Redis built from the release tarball and that
+# build is slower than everything else in this file put together. It runs on the
+# boxes, next to the benchmarks, against the same binaries.
+#
+# What is worth checking here is the part that can be wrong without anyone
+# noticing: the corpus files parse, the register refuses an entry with no reason
+# on it, and the RESP reader keeps two different spellings of nothing apart.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: -D warnings
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2.8.2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets
+      - run: cargo test --workspace
+
+  shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: shellcheck
+        run: shellcheck -s sh suite/*.sh
