@@ -98,6 +98,11 @@ for f in $files; do
     ended="failures"
   elif [ "$status" != 0 ]; then
     ended="runtest exited $status"
+  elif [ "$ok" = 0 ]; then
+    # Every test in the file was skipped, which nearly always means the file is
+    # tagged for a server the suite started itself. It ran to the end and it
+    # said nothing about us, so it is not a pass.
+    ended="nothing ran"
   else
     ended="clean"
     clean="$clean $f"

@@ -3,8 +3,20 @@
 # One path per line, relative to the vendored tests/ directory and without the
 # .tcl on the end, which is the form runtest --single wants.
 #
-# This list only grows by somebody running suite/runtest.sh --all, watching a
-# file go green and adding it in a diff. It never grows by editing a test.
+# This list only grows by somebody running suite/sweep.sh, watching a file go
+# green and adding it in a diff. It never grows by editing a test.
 #
-# It is empty because the suite has not been run against yodb yet. That is a
-# real answer and it is the one that goes here until there is a better one.
+# A file is on this list only if it ran at least one test and every test it ran
+# passed. Files where the suite skipped everything are not passes and are not
+# here: in external mode a test tagged for a server the suite started itself
+# comes out as [ignore] and the file ends with nothing said about us either
+# way. unit/acl and unit/aofrw are like that today, and eighteen files in the
+# sweep end that way, which is why the sweep prints "nothing ran" for them
+# rather than "clean".
+#
+# unit/networking runs one test in external mode and passes it. unit/quit runs
+# three and passes all three, including the pipelined commands after QUIT case
+# that found a real bug.
+
+unit/networking
+unit/quit

@@ -39,6 +39,18 @@ Divergences are sorted worst first in the report. Accepting a command Redis refu
 
 The file is deliberately awkward to add to. A divergence with no reason on it does not load at all, which means saying "we behave differently here and this is why" has to be a diff somebody wrote and somebody else read.
 
+## Where the suite stands
+
+Run `suite/sweep.sh` and it runs every file on its own, with its own server and its own time limit, and prints what each one did. This is the state on 2026-08-29, against yo at the head of main and the Redis 8.10.1 tests, on a Linux box.
+
+Two files pass end to end and are in `suite/passing.txt`: `unit/networking` at 1 of 1 and `unit/quit` at 3 of 3.
+
+Eight more run real tests and then stop at a command we have not written yet. `unit/protocol` is 14 passed and 3 failed and ends at `DEBUG PROTOCOL`, where the three failures are `SADD` and `SRANDMEMBER`. `unit/type/incr` is 11 and ends at `RPUSH`. `unit/type/increx` is 11 and ends at `OBJECT ENCODING`. `unit/keyspace` is 3 and ends at `KEYS`. `unit/type/string` is 2 and ends at `proto-max-bulk-len`. `unit/introspection` is 1 and ends at `CLIENT`. `unit/info-command` runs to the end with 3 failures, which are `rejected_calls` and `master_repl_offset`. The rest end on the first command from a milestone that has not started.
+
+Eighteen files run to the end having skipped every test in them. In external mode the suite marks a test that needs a server it started itself as `[ignore]`, so the file says nothing about us either way. The sweep calls that "nothing ran" rather than "clean", and those files are not in `passing.txt`.
+
+A long tail of files ends on `CONFIG SET` rather than on a data command, because the suite sets a parameter Redis has and we do not before it runs anything. That is worth knowing separately from the command gaps: those files are not testing configuration, they just cannot get to the part that tests anything else.
+
 ## What is not here yet
 
 The command scoreboard, which is the other thing this repository is supposed to hold: a generated table of every Redis command against what yo does with it. Right now the honest version of that table is short, and it belongs here rather than in a README that can go stale quietly.
