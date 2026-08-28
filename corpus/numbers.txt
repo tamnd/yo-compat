@@ -81,5 +81,34 @@ GET newfloat
 INCRBYFLOAT float notafloat
 INCRBYFLOAT float nan
 INCRBYFLOAT float inf
+
+# What counts as a float is decided by strtold on their side, and strtold takes
+# more than anyone expects. Hexadecimal is the surprising one and it works on
+# both the stored value and the increment.
 SET hexish 0x10
 INCRBYFLOAT hexish 1
+SET hexexp 0X1p4
+INCRBYFLOAT hexexp 0
+SET hexfrac 0x1.8p1
+INCRBYFLOAT hexfrac 0
+SET hexinc 1
+INCRBYFLOAT hexinc 0x10
+SET plussed +5
+INCRBYFLOAT plussed 1
+SET pointfive .5
+INCRBYFLOAT pointfive 0
+SET trailingdot 5.
+INCRBYFLOAT trailingdot 0
+INCRBYFLOAT newone .25
+INCRBYFLOAT newone ""
+
+# Too big to hold is not the same as the word infinity, and the two are not
+# refused in the same place.
+SET overflow 1e400
+INCRBYFLOAT overflow 0
+SET five 5
+INCRBYFLOAT five 1e400
+SET worded inf
+INCRBYFLOAT worded 0
+INCRBYFLOAT five infinity
+INCRBYFLOAT five -inf
