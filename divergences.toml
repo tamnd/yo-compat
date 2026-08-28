@@ -1,0 +1,20 @@
+# Differences from Redis we have decided to live with.
+#
+# Every entry needs a corpus file, a command prefix and a reason, and the reason
+# is not optional: a file without one does not load. The point is that saying
+# "we behave differently here" costs a diff somebody wrote and somebody else
+# read, rather than a test quietly going green.
+#
+# An entry is not a place to park a bug. If the right answer is to fix it, fix
+# it. What belongs here is a difference that is deliberate and will stay.
+#
+#   [[divergence]]
+#   corpus = "strings.txt"
+#   command = "OBJECT ENCODING"
+#   reason = "we have one string encoding and no plans for a second"
+#
+# The command is matched as a prefix, so "SETRANGE" covers every SETRANGE in
+# that file and "SETRANGE key 5" covers only the lines that start that way.
+
+# Nothing registered yet. Everything that differs today is either a bug or a
+# command we have not written, and neither of those is a decision.

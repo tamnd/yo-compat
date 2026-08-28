@@ -1,0 +1,23 @@
+[package]
+name = "yo-compat"
+description = "Sends the same commands to yo and to a real Redis and reports every reply that differs."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+# No dependencies. A RESP client from crates.io is written to be pleasant, which
+# means it normalises: it turns a null bulk string and a null array into the same
+# None, and a simple string and a bulk string into the same String. Those are
+# exactly the differences this binary exists to catch, so the client here is our
+# own and it is deliberately unhelpful.
+[dependencies]
+
+[[bin]]
+name = "yocompat"
+path = "src/main.rs"

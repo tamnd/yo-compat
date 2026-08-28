@@ -1,0 +1,70 @@
+# Being wrong the same way they are.
+#
+# Clients branch on error text. Not on an error type, because RESP does not have
+# one, on the first word and sometimes on the whole string. A server that
+# refuses the right commands with the wrong words breaks a client library in a
+# way that looks like a bug in the library, so the wording is part of the
+# protocol whether anyone likes it or not.
+
+# Wrong number of arguments, at both ends.
+GET
+GET one two
+SET
+SET onlykey
+SET key value extra
+APPEND
+APPEND key
+STRLEN
+STRLEN a b
+INCR
+INCR a b
+INCRBY key
+DECRBY key
+INCRBYFLOAT key
+GETRANGE key
+GETRANGE key 0
+GETRANGE key 0 1 2
+SETRANGE key
+SETRANGE key 0
+GETSET key
+GETDEL
+GETDEL a b
+MSET
+MSET onlykey
+MSET a 1 b
+MSETNX
+MSETNX a 1 b
+MGET
+SETEX key
+SETEX key 100
+PSETEX key 100
+SETNX key
+LCS key
+LCS a b c
+
+# Arguments that are the wrong shape rather than the wrong number.
+SETRANGE key notanoffset value
+SETRANGE key -1 value
+GETRANGE key notastart 10
+GETRANGE key 0 notanend
+SETEX key notaseconds value
+PSETEX key notamillis value
+LCS a b NOTANOPTION
+LCS a b IDX MINMATCHLEN notanumber
+LCS a b LEN IDX
+
+# A command nobody has.
+NOTACOMMAND
+NOTACOMMAND with args
+GETT key
+
+# Subcommands that do not exist under commands that do.
+CONFIG NOTASUBCOMMAND
+CONFIG
+COMMAND NOTASUBCOMMAND
+
+# Casing is not supposed to matter anywhere.
+set lower value
+GeT lower
+INCRBYFLOAT lower 1
+sTrLeN lower

@@ -1,0 +1,71 @@
+# Expiry, without ever asking what the remaining time is.
+#
+# TTL is not in here on purpose. A corpus that asks two servers how many
+# milliseconds are left on a key is a corpus that fails on a slow afternoon, and
+# a flaky compatibility test gets ignored, which is worse than not having it.
+# What is checked instead is the part that is deterministic: which option
+# combinations are accepted, what each one replies, whether the value is still
+# there afterwards, and which ones are refused.
+
+SET vanish value EX 100
+GET vanish
+SET vanish value PX 100000
+GET vanish
+SET vanish value EXAT 33229822800
+GET vanish
+SET vanish value PXAT 33229822800000
+GET vanish
+SET vanish value KEEPTTL
+GET vanish
+
+SETEX seconds 100 value
+GET seconds
+PSETEX millis 100000 value
+GET millis
+
+# A zero or negative expiry is refused rather than treated as delete now, and
+# the key it was aimed at is left alone.
+SET keep original
+SET keep replaced EX 0
+GET keep
+SET keep replaced EX -1
+GET keep
+SETEX zero 0 value
+GET zero
+SETEX negative -1 value
+PSETEX zeroms 0 value
+SETEX huge 9999999999999999 value
+
+# The options that cannot be used together.
+SET both value EX 100 PX 100000
+SET both value EX 100 KEEPTTL
+SET both value NX XX
+SET both value EX
+SET both value EX notanumber
+SET both value PERSIST
+
+# GETEX is the one that reads and changes the expiry in the same breath, and
+# with no options at all it changes nothing.
+SET readme value EX 100
+GETEX readme
+GET readme
+GETEX readme PERSIST
+GET readme
+GETEX readme EX 200
+GETEX readme PX 200000
+GETEX readme EXAT 33229822800
+GETEX readme PXAT 33229822800000
+GETEX missing
+GETEX missing PERSIST
+GETEX readme EX 100 PERSIST
+GETEX readme EX notanumber
+GETEX readme NOTANOPTION
+
+# An expiry that has already passed is a delete, and the reply says so from
+# whichever side you look at it.
+SET gone value EXAT 1
+GET gone
+SET gone2 value PXAT 1
+GET gone2
+GETEX readme EXAT 1
+GET readme

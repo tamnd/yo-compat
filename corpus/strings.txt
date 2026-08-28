@@ -1,0 +1,120 @@
+# Plain string commands, and mostly their edges rather than their happy paths.
+#
+# The happy path agrees on every server that has ever shipped. What does not
+# agree is the empty value, the offset past the end, the negative range, the
+# count that comes back as an integer on one side and a bulk string on the
+# other, and the difference between a key that holds nothing and a key that is
+# not there. Those are the lines here.
+
+SET plain hello
+GET plain
+GET missing
+SET plain world
+GET plain
+
+# An empty value is a value. A server that turns it back into a missing key is
+# wrong in a way that is easy to ship and hard to notice.
+SET empty ""
+GET empty
+STRLEN empty
+STRLEN missing
+GET empty
+
+SET withspace "two words"
+GET withspace
+STRLEN withspace
+
+# APPEND onto nothing creates the key, and the reply is the new length rather
+# than the number of bytes appended.
+APPEND fresh abc
+GET fresh
+APPEND fresh def
+STRLEN fresh
+APPEND fresh ""
+GET fresh
+
+# GETRANGE indexes from both ends, clamps rather than erroring, and an empty
+# result is an empty bulk string and not a null.
+SET range "This is a string"
+GETRANGE range 0 3
+GETRANGE range -3 -1
+GETRANGE range 0 -1
+GETRANGE range 10 100
+GETRANGE range 100 200
+GETRANGE range -1 -100
+GETRANGE range 0 0
+GETRANGE missing 0 -1
+SUBSTR range 0 3
+
+# SETRANGE past the end pads with zero bytes, which is the one place a string
+# command quietly allocates. SETRANGE with an empty value on a missing key does
+# nothing at all and says zero.
+SET pad "Hello World"
+SETRANGE pad 6 "Redis"
+GET pad
+SETRANGE padded 5 "x"
+STRLEN padded
+GET padded
+SETRANGE nothing 0 ""
+GET nothing
+
+# SETNX and the SET flags are two spellings of the same idea and they do not
+# reply the same way. One says an integer, the other says OK or a null.
+SETNX once first
+GET once
+SETNX once second
+GET once
+SET once third NX
+GET once
+SET once fourth XX
+GET once
+SET fresh2 value NX
+GET fresh2
+SET missing2 value XX
+GET missing2
+
+# GETSET and GETDEL both hand back what was there, including when nothing was.
+SET old before
+GETSET old after
+GET old
+GETSET brandnew value
+GETDEL old
+GET old
+GETDEL old
+GETDEL missing
+
+# SET GET is the modern spelling of GETSET and it has its own edge: on a key
+# that is not there it replies null and still writes.
+SET newkey value GET
+GET newkey
+SET newkey second GET
+
+# MSET is always OK, MSETNX is all or nothing, and MGET fills the gaps with
+# nulls rather than skipping them.
+MSET a 1 b 2 c 3
+MGET a b c
+MGET a missing c
+MGET missing missing
+MSETNX d 4 e 5
+MGET d e
+MSETNX e 6 f 7
+GET f
+GET e
+
+# Long values, because the encoding switches somewhere and the switch should
+# not be visible from the outside.
+SET long "0123456789012345678901234567890123456789012345678901234567890123456789"
+STRLEN long
+GETRANGE long 60 -1
+
+# LCS is the one string command with a shape to it. LEN is an integer, IDX is a
+# map, and the match list is ordered.
+MSET key1 "ohmytext" key2 "mynewtext"
+LCS key1 key2
+LCS key1 key2 LEN
+LCS key1 key2 IDX
+LCS key1 key2 IDX MINMATCHLEN 4
+LCS key1 key2 IDX WITHMATCHLEN
+LCS key1 key2 IDX MINMATCHLEN 4 WITHMATCHLEN
+LCS key1 nothere
+LCS nothere alsonothere
