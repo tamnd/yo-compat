@@ -16,5 +16,66 @@
 # The command is matched as a prefix, so "SETRANGE" covers every SETRANGE in
 # that file and "SETRANGE key 5" covers only the lines that start that way.
 
-# Nothing registered yet. Everything that differs today is either a bug or a
-# command we have not written, and neither of those is a decision.
+# ------------------------------------------------------------- long double
+#
+# Redis does INCRBYFLOAT in C's long double and prints the result with %.17Lf
+# with the trailing zeroes cut off. We do it in an f64. That is one decision and
+# it accounts for every entry below.
+#
+# The reason it is a decision and not a bug is that long double is not one type.
+# It is 80 bit extended on x86, 128 bit quad on Linux aarch64, and plain 64 bit
+# double on macOS. Compiled and run on two of those, the same command gives two
+# different strings:
+#
+#   SET ld 5005.6 ; INCRBYFLOAT ld 0
+#   x86_64 linux    5005.60000000000000009
+#   macos arm64     5005.60000000000036380
+#
+# So there is no single Redis answer here to be compatible with. A client that
+# reads seventeen digits off a Redis on one machine and compares them to a Redis
+# on another already gets this wrong today.
+#
+# Formatting our f64 their way, %.17f with the zeroes cut, would fix the rare
+# cases and break the common ones, because a double's seventeenth digit is noise
+# where a long double's is zero. INCRBYFLOAT on 10.5 by 0.1 agrees at 10.6 today
+# and would become 10.09999999999999964 against their 10.1. What we do now
+# agrees with x86 Redis everywhere the expansion is clean, which is nearly
+# everywhere, and these seven lines are where it is not.
+#
+# If this ever needs to go away, the fix is a software long double and not a
+# change to the printing.
+
+[[divergence]]
+corpus = "numbers.txt"
+command = "INCRBYFLOAT float 5.0e3"
+reason = "long double keeps digits past a double, see the note above"
+
+[[divergence]]
+corpus = "numbers.txt"
+command = "GET float"
+reason = "reads back what the INCRBYFLOAT above stored"
+
+[[divergence]]
+corpus = "numbers.txt"
+command = "INCRBYFLOAT intish"
+reason = "long double keeps digits past a double, see the note above"
+
+[[divergence]]
+corpus = "numbers.txt"
+command = "INCRBYFLOAT tiny"
+reason = "below their printing resolution, so they round it to a flat zero"
+
+[[divergence]]
+corpus = "numbers.txt"
+command = "INCRBYFLOAT small2 1e-20"
+reason = "below their printing resolution, so they round it to a flat zero"
+
+[[divergence]]
+corpus = "numbers.txt"
+command = "INCRBYFLOAT overflow"
+reason = "1e400 fits in an 80 bit long double and does not fit in a double"
+
+[[divergence]]
+corpus = "numbers.txt"
+command = "INCRBYFLOAT five 1e400"
+reason = "1e400 fits in an 80 bit long double and does not fit in a double"
