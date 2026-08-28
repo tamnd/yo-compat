@@ -112,3 +112,12 @@ SET worded inf
 INCRBYFLOAT worded 0
 INCRBYFLOAT five infinity
 INCRBYFLOAT five -inf
+
+# And too small to see. Redis prints this one with seventeen digits after the
+# point and then cuts the trailing zeroes off, so a value below that resolution
+# comes back as a flat zero.
+SET tiny 0
+INCRBYFLOAT tiny 0.00000000000000000001
+SET small2 0
+INCRBYFLOAT small2 1e-20
+INCRBYFLOAT small2 0.5
