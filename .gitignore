@@ -2,3 +2,6 @@
 # The vendored Redis tree. suite/fetch.sh puts it here and it is their code at a
 # pinned version, not ours, so it does not belong in our history.
 /redis
+# Where suite/sweep.sh puts its per file logs. Results, not code, and the same
+# rule the yo repository learned the hard way.
+/results
