@@ -43,9 +43,11 @@ The file is deliberately awkward to add to. A divergence with no reason on it do
 
 Run `suite/sweep.sh` and it runs every file on its own, with its own server and its own time limit, and prints what each one did. This is the state on 2026-08-29, against yo at the head of main and the Redis 8.10.1 tests, on a Linux box.
 
-Two files pass end to end and are in `suite/passing.txt`: `unit/networking` at 1 of 1 and `unit/quit` at 3 of 3.
+Three files pass end to end and are in `suite/passing.txt`: `unit/networking` at 1 of 1, `unit/quit` at 3 of 3 and `unit/info-command` at 3 of 3.
 
-Eight more run real tests and then stop at a command we have not written yet. `unit/protocol` is 14 passed and 3 failed and ends at `DEBUG PROTOCOL`, where the three failures are `SADD` and `SRANDMEMBER`. `unit/type/incr` is 11 and ends at `RPUSH`. `unit/type/increx` is 11 and ends at `OBJECT ENCODING`. `unit/keyspace` is 3 and ends at `KEYS`. `unit/type/string` is 2 and ends at `proto-max-bulk-len`. `unit/introspection` is 1 and ends at `CLIENT`. `unit/info-command` runs to the end with 3 failures, which are `rejected_calls` and `master_repl_offset`. The rest end on the first command from a milestone that has not started.
+`unit/info-command` is the newest of the three and it went green on 2026-09-01. It was running to the end with 3 failures, which were `rejected_calls` and `master_repl_offset`, and both of those are now answered: `INFO commandstats` reports how many times each command was called, refused and failed, and the replication section reports the offset. What it does not report is `usec` and `usec_per_call`, because timing a command means two clock reads around a call that takes tens of nanoseconds, and the suite does not ask for either one.
+
+Seven more run real tests and then stop at a command we have not written yet. `unit/protocol` is 14 passed and 3 failed and ends at `DEBUG PROTOCOL`, where the three failures are `SADD` and `SRANDMEMBER`. `unit/type/incr` is 11 and ends at `RPUSH`. `unit/type/increx` is 11 and ends at `OBJECT ENCODING`. `unit/keyspace` is 3 and ends at `KEYS`. `unit/type/string` is 2 and ends at `proto-max-bulk-len`. `unit/introspection` is 1 and ends at `CLIENT`. The rest end on the first command from a milestone that has not started.
 
 Eighteen files run to the end having skipped every test in them. In external mode the suite marks a test that needs a server it started itself as `[ignore]`, so the file says nothing about us either way. The sweep calls that "nothing ran" rather than "clean", and those files are not in `passing.txt`.
 

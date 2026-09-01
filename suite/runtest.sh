@@ -47,10 +47,12 @@ fi
 server=$!
 trap 'kill $server 2>/dev/null || true' EXIT
 
-# Wait for it rather than sleeping a guess.
+# Wait for it rather than sleeping a guess. The flag is -w and not -q because
+# -q is GNU netcat only and the netcat on a Mac does not have it, and -w is the
+# one both of them read as give up after this many seconds.
 i=0
 while [ $i -lt 100 ]; do
-  if printf 'PING\r\n' | timeout 1 nc -q1 127.0.0.1 "$PORT" 2>/dev/null | grep -q PONG; then
+  if printf 'PING\r\n' | nc -w1 127.0.0.1 "$PORT" 2>/dev/null | grep -q PONG; then
     break
   fi
   i=$((i + 1))

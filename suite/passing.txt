@@ -16,7 +16,9 @@
 #
 # unit/networking runs one test in external mode and passes it. unit/quit runs
 # three and passes all three, including the pipelined commands after QUIT case
-# that found a real bug.
+# that found a real bug. unit/info-command runs three and passes all three, and
+# it is the file that made us write INFO commandstats.
 
 unit/networking
 unit/quit
+unit/info-command
